@@ -33,6 +33,7 @@ public class JSONUtils {
     public static final String CREATED_UTC_KEY = "created_utc";
     public static final String PREVIEW_KEY = "preview";
     public static final String IMAGES_KEY = "images";
+    public static final String VARIANTS_KEY = "variants";
     public static final String WIDTH_KEY = "width";
     public static final String HEIGHT_KEY = "height";
     public static final String SOURCE_KEY = "source";

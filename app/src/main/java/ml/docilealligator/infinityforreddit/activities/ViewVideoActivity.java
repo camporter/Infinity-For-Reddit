@@ -122,6 +122,7 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
     public static final int PLAYBACK_SPEED_175 = 175;
     public static final int PLAYBACK_SPEED_200 = 200;
     public static final String EXTRA_VIDEO_DOWNLOAD_URL = "EVDU";
+    public static final String EXTRA_FILE_NAME_KEY = "EFNK";
     public static final String EXTRA_SUBREDDIT = "ES";
     public static final String EXTRA_ID = "EI";
     public static final String EXTRA_POST_TITLE = "EPT";
@@ -544,10 +545,14 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
             }
         } else if (videoType == VIDEO_TYPE_DIRECT || videoType == VIDEO_TYPE_IMGUR) {
             videoDownloadUrl = mVideoUri.toString();
-            if (videoType == VIDEO_TYPE_DIRECT) {
-                videoFileName = FilenameUtils.getName(videoDownloadUrl);
-            } else {
-                videoFileName = "imgur-" + FilenameUtils.getName(videoDownloadUrl);
+
+            videoFileName = intent.getStringExtra(EXTRA_FILE_NAME_KEY);
+            if (videoFileName == null) {
+                if (videoType == VIDEO_TYPE_DIRECT) {
+                    videoFileName = FilenameUtils.getName(videoDownloadUrl);
+                } else {
+                    videoFileName = "imgur-" + FilenameUtils.getName(videoDownloadUrl);
+                }
             }
             // Produces DataSource instances through which media data is loaded.
             dataSourceFactory = new CacheDataSource.Factory().setCache(mSimpleCache)

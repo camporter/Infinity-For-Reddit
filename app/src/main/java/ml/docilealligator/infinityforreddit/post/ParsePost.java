@@ -435,6 +435,25 @@ public class ParsePost {
                                 hidden, spoiler, nsfw, stickied, archived, locked, saved, isCrosspost,
                                 distinguished);
 
+                        // Get the mp4 version, if possible
+                        if (data.has(JSONUtils.PREVIEW_KEY)) {
+                            JSONObject images = data.getJSONObject(JSONUtils.PREVIEW_KEY)
+                                    .getJSONArray(JSONUtils.IMAGES_KEY)
+                                    .getJSONObject(0);
+                            if (images.has(JSONUtils.VARIANTS_KEY)) {
+                                JSONObject variants = images.getJSONObject(JSONUtils.VARIANTS_KEY);
+                                if (variants.has(JSONUtils.MP4_KEY)) {
+                                    // Found the mp4 variant, so treat the post as a video
+                                    url = variants.getJSONObject(JSONUtils.MP4_KEY)
+                                            .getJSONObject(JSONUtils.SOURCE_KEY)
+                                            .getString(JSONUtils.URL_KEY);
+                                    post.setPostType(Post.VIDEO_TYPE);
+                                    post.setIsPreviewMp4(true);
+                                    post.setVideoDownloadUrl(url);
+                                }
+                            }
+                        }
+
                         post.setPreviews(previews);
                         post.setVideoUrl(url);
                     } else if (uri.getAuthority().contains("imgur.com") && (path.endsWith(".gifv") || path.endsWith(".mp4"))) {

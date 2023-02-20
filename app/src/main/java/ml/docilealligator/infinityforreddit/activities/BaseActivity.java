@@ -6,6 +6,7 @@ import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
 import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
@@ -13,6 +14,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
@@ -50,6 +52,7 @@ import ml.docilealligator.infinityforreddit.font.FontFamily;
 import ml.docilealligator.infinityforreddit.font.FontStyle;
 import ml.docilealligator.infinityforreddit.font.TitleFontFamily;
 import ml.docilealligator.infinityforreddit.font.TitleFontStyle;
+import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.utils.CustomThemeSharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.Utils;
@@ -399,5 +402,76 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomFo
 
     public void unlockSwipeRightToGoBack() {
 
+    }
+
+
+    public Intent getOpenMediaIntent(Post post, int galleryItemIndex, int progressSeconds) {
+        Intent intent = getOpenMediaIntent(post, galleryItemIndex);
+        intent.putExtra(ViewVideoActivity.EXTRA_PROGRESS_SECONDS, progressSeconds);
+        return intent;
+    }
+
+    public Intent getOpenMediaIntent(Post post, int galleryItemIndex) {
+        if (post.getPostType() == Post.VIDEO_TYPE) {
+            Intent intent = new Intent(this, ViewVideoActivity.class);
+            if (post.isImgur()) {
+                intent.setData(Uri.parse(post.getVideoUrl()));
+                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_IMGUR);
+            } else if (post.isGfycat()) {
+                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_GFYCAT);
+                intent.putExtra(ViewVideoActivity.EXTRA_GFYCAT_ID, post.getGfycatId());
+            } else if (post.isRedgifs()) {
+                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_REDGIFS);
+                intent.putExtra(ViewVideoActivity.EXTRA_GFYCAT_ID, post.getGfycatId());
+            } else if (post.isStreamable()) {
+                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_STREAMABLE);
+                intent.putExtra(ViewVideoActivity.EXTRA_STREAMABLE_SHORT_CODE, post.getStreamableShortCode());
+            } else if (post.isPreviewMp4()) {
+                intent.setData(Uri.parse(post.getVideoUrl()));
+                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_DIRECT);
+                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_DOWNLOAD_URL, post.getVideoDownloadUrl());
+                intent.putExtra(ViewVideoActivity.EXTRA_FILE_NAME_KEY, post.getSubredditName() + "-" + post.getId() + ".mp4");
+            } else {
+                intent.setData(Uri.parse(post.getVideoUrl()));
+                intent.putExtra(ViewVideoActivity.EXTRA_SUBREDDIT, post.getSubredditName());
+                intent.putExtra(ViewVideoActivity.EXTRA_ID, post.getId());
+                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_DOWNLOAD_URL, post.getVideoDownloadUrl());
+            }
+            intent.putExtra(ViewVideoActivity.EXTRA_POST_TITLE, post.getTitle());
+            intent.putExtra(ViewVideoActivity.EXTRA_IS_NSFW, post.isNSFW());
+            return intent;
+        } else if (post.getPostType() == Post.IMAGE_TYPE) {
+            Intent intent = new Intent(this, ViewImageOrGifActivity.class);
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_IMAGE_URL_KEY, post.getUrl());
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_FILE_NAME_KEY, post.getSubredditName()
+                    + "-" + post.getId() + ".jpg");
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_POST_TITLE_KEY, post.getTitle());
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_SUBREDDIT_OR_USERNAME_KEY, post.getSubredditName());
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_IS_NSFW, post.isNSFW());
+            return intent;
+        } else if (post.getPostType() == Post.GIF_TYPE) {
+            Intent intent = new Intent(this, ViewImageOrGifActivity.class);
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_FILE_NAME_KEY, post.getSubredditName()
+                    + "-" + post.getId() + ".gif");
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_GIF_URL_KEY, post.getVideoUrl());
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_POST_TITLE_KEY, post.getTitle());
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_SUBREDDIT_OR_USERNAME_KEY, post.getSubredditName());
+            intent.putExtra(ViewImageOrGifActivity.EXTRA_IS_NSFW, post.isNSFW());
+            return intent;
+        } else if (post.getPostType() == Post.LINK_TYPE || post.getPostType() == Post.NO_PREVIEW_LINK_TYPE) {
+            Intent intent = new Intent(this, LinkResolverActivity.class);
+            Uri uri = Uri.parse(post.getUrl());
+            intent.setData(uri);
+            intent.putExtra(LinkResolverActivity.EXTRA_IS_NSFW, post.isNSFW());
+            return intent;
+        } else if (post.getPostType() == Post.GALLERY_TYPE) {
+            Intent intent = new Intent(this, ViewRedditGalleryActivity.class);
+            intent.putParcelableArrayListExtra(ViewRedditGalleryActivity.EXTRA_REDDIT_GALLERY, post.getGallery());
+            intent.putExtra(ViewRedditGalleryActivity.EXTRA_SUBREDDIT_NAME, post.getSubredditName());
+            intent.putExtra(ViewRedditGalleryActivity.EXTRA_IS_NSFW, post.isNSFW());
+            intent.putExtra(ViewRedditGalleryActivity.EXTRA_GALLERY_ITEM_INDEX, galleryItemIndex);
+            return intent;
+        }
+        return null;
     }
 }
